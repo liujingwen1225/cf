@@ -1,5 +1,6 @@
 package org.recommend.cf
 
+import org.apache.log4j.{Level, Logger}
 import org.apache.spark.ml.evaluation.RegressionEvaluator
 import org.apache.spark.ml.recommendation.ALS
 import org.apache.spark.sql.SaveMode
@@ -8,30 +9,36 @@ import org.recommend.util.SessionUtil
 /**
  * ALS协同过滤算法模型训练
  */
-object TrainAlsModel {
+object AlsModel {
 
   def main(args: Array[String]): Unit = {
+    Logger.getLogger("org.apache.spark").setLevel(Level.ERROR)
 
     val session = SessionUtil.createSparkSession(this.getClass)
 
-    val url = "jdbc:mysql://172.16.28.128:3306/recommend?characterEncoding=UTF-8&useSSL=false&zeroDateTimeBehavior=convertToNull&allowMultiQueries=true&serverTimezone=Asia/Shanghai"
+    val url = ""
     val user = "root"
     val password = "password"
-    val table = "user_item_rating"
+    val table = "student_course"
 
     val prop = new java.util.Properties
     prop.setProperty("user", user)
     prop.setProperty("password", password)
     //注册 mysql 用户评分表
-    session.read.jdbc(url, table, prop).createOrReplaceTempView(table)
+//    session.read.jdbc(url, table, prop).createOrReplaceTempView(table)
+    session.
+      read
+      .option("header", "true")
+      .option("delimiter", ",")
+      .csv("src/main/resources/data/rating.csv").createOrReplaceTempView("rating")
     // 用户评分表，用于训练模型
     val GetUserRatingSql =
       s"""
-         |SELECT user_id,
-         |       item_id,
-         |       rating
+         |SELECT cast(user_id as int) user_id,
+         |       cast(item_id as int) item_id,
+         |       cast(rating as double) rating
          |FROM
-         |  user_item_rating
+         |  rating
       """.stripMargin
     println("加载评分表")
     val allData = session.sql(GetUserRatingSql)
@@ -75,7 +82,8 @@ object TrainAlsModel {
       }
     println("结束训练模型")
     val rmse = session.createDataFrame(result).toDF("rank", "lambda", "rmse")
-    rmse.write.mode(SaveMode.Overwrite).saveAsTable("zjcl.als_model_rmse")
+    rmse.show()
+//    rmse.write.mode(SaveMode.Overwrite).saveAsTable("als_model_rmse")
     session.close()
   }
 

@@ -2,11 +2,11 @@ package org.recommend.load
 
 import org.recommend.util.{MysqlUtil, SessionUtil}
 
-object ReadCsv {
+object LoadData {
   def main(args: Array[String]): Unit = {
     //课程类型,课程链接,参加人数,授课老师,课程名称,课程学校,课程标签,开课开始时间,开课结束时间,课程概述,课程状态,课程评分,封面图
 
-    val session = SessionUtil.createSparkSession(ReadCsv.getClass)
+    val session = SessionUtil.createSparkSession(LoadData.getClass)
     session
       .read
       .option("header", "true")

@@ -10,9 +10,9 @@ import java.util.Properties
 object MysqlUtil {
   private val url = "jdbc:mysql://43.136.26.67:13306/course-recommend?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=true&serverTimezone=GMT%2B8"
   private val prop = new Properties
-  prop.setProperty("user", "hadoop")
+  prop.setProperty("user", "root")
   prop.setProperty("driver", "com.mysql.cj.jdbc.Driver")
-  prop.setProperty("password", "JINGwen!520665")
+  prop.setProperty("password", "password")
 
   /**
    * @param spark

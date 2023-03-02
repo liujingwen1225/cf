@@ -17,5 +17,6 @@ object SessionUtil {
       .config("spark.sql.partitions", partitions)
       .config("spark.default.parallelism", "2")
       .getOrCreate()
+
   }
 }
