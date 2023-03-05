@@ -1,26 +1,33 @@
 package org.recommend.cf
 
-import org.recommend.util.SessionUtil
+import org.apache.spark.sql.SaveMode
+import org.recommend.util.{MysqlUtil, SessionUtil}
 
 
 /**
  * 基于物品的协同过滤算法
- * usercf
+ * itemcf
  */
 object ItemCf {
 
   def main(args: Array[String]): Unit = {
     val session = SessionUtil.createSparkSession(this.getClass)
-    session.
-      read
-      .option("header", "true")
-      .option("delimiter", ",")
-      .csv("src/main/resources/data/rating.csv").createOrReplaceTempView("rating")
 
     import org.apache.spark.sql.functions._
     import session.implicits._
 
-    val df = session.sql("select * from rating")
+    //注册 mysql 用户评分表
+    MysqlUtil.readMysqlTable(session, "student_course")
+    MysqlUtil.readMysqlTable(session, "course")
+    val GetUserRatingSql =
+      s"""
+         |select st.student_id as user_id, st.course_id as item_id, (ifnull(st.rating, 2) * 0.4 + c.grading * 0.6) rating
+         |from student_course st
+         |         left join course c on c.id = st.course_id
+         |where grading is not null
+      """.stripMargin
+    println("加载评分表")
+    val df = session.sql(GetUserRatingSql)
     // 这个是在保证每个用户对一个课程只评价一次（即以选了课记一分）
     val df_sim = df.selectExpr("user_id ", "item_id as item_v", "rating as rating_v")
     val df_dot = df.join(df_sim, "user_id")
@@ -87,8 +94,9 @@ object ItemCf {
     // 获得最终的推荐
     val df_rec = df_rec_tmp.groupBy("user_id", "item_id")
       .agg(sum("rating").as("rating"))
-      .selectExpr("user_id", "item_id", "rating", "row_number() over(partition by user_id order by rating desc) as rank")
+      .selectExpr("user_id", "item_id as course_id", "row_number() over(partition by user_id order by rating desc) as ranking")
       .where("rank<=12")
-    df_rec.show(100)
+    MysqlUtil.writeMysqlTable(SaveMode.Overwrite,df_rec,"course_recommend")
+
   }
 }

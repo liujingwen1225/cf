@@ -6,9 +6,9 @@ import org.apache.spark.ml.recommendation.ALS
 import org.recommend.util.{MysqlUtil, SessionUtil}
 
 /**
- * ALS协同过滤算法模型训练基于均方根误差进行验证模型准确度
+ * ALS协同过滤算法模型训练
  */
-object TrainAlsModelWithRmse {
+object AlsModelAllUser {
 
   def main(args: Array[String]): Unit = {
     Logger.getLogger("org.apache.spark").setLevel(Level.ERROR)
@@ -27,12 +27,11 @@ object TrainAlsModelWithRmse {
          |where grading is not null
       """.stripMargin
     println("加载评分表")
-
     val allData = session.sql(GetUserRatingSql)
+    // 样本基本信息为
     val numRatings = allData.count()
     val numUser = allData.rdd.map(rating => rating.get(0)).distinct().count()
     val numItems = allData.rdd.map(rating => rating.get(1)).distinct().count()
-
     println("样本基本信息为：")
     println("样本数：" + numRatings)
     println("用户数：" + numUser)
@@ -53,46 +52,25 @@ object TrainAlsModelWithRmse {
     println("测试样本数：" + testDataNum)
 
     println("开始训练模型")
-
     // 使用ALS算法训练隐语义模型
     val als = new ALS()
       // 是否开启隐性反馈
-//      .setImplicitPrefs(true)
+      //      .setImplicitPress(true)
       // 模型的最大迭代次数（默认10）
       .setMaxIter(10)
+      .setRegParam(0.1)
       // 隐性反馈，这个参数决定了偏好行为强度的基准
-//      .setAlpha(1)
+      //      .setAlpha(1)
       .setUserCol("student_id")
       .setItemCol("course_id")
       .setRatingCol("rating")
-//    val ranks = Array(10, 15, 20)
-    val lambdas = Array(0.1, 0.01, 0.001)
-    val result = for (lambda <- lambdas)
-      yield {
-        als
-//          .setRank(rank)
-          .setRegParam(lambda)
-        val model = als.fit(trainData)
-        // 冷启动处理。nan或者drop
-        model.setColdStartStrategy("drop")
-        // rmse 模型预测
-        val predictions = model.transform(testData)
-        println("正则化参数%s预测模型结果输出", lambda)
-        predictions.show(true)
-        val evaluator = new RegressionEvaluator()
-          .setMetricName("rmse")
-          .setLabelCol("rating")
-          .setPredictionCol("prediction")
-        val rmse = evaluator.evaluate(predictions)
-//        (rank,lambda, rmse)
-        (lambda, rmse)
-      }
-    println("结束训练模型")
-    val rmse = session.createDataFrame(result).toDF("lambda", "rmse")
-    println("数据均方根误差的结果。选取最rmse最小的最为算法参数")
-    rmse.show()
+    val model = als.fit(trainData)
+    // 冷启动处理。nan或者drop
+    model.setColdStartStrategy("drop")
+    val frame = model.recommendForAllUsers(20)
+    // todo 过滤
+    frame.show(false)
     session.close()
   }
-
 
 }

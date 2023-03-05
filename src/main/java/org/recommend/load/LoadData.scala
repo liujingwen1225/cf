@@ -1,5 +1,6 @@
 package org.recommend.load
 
+import org.apache.spark.sql.SaveMode
 import org.recommend.util.{MysqlUtil, SessionUtil}
 
 object LoadData {
@@ -24,6 +25,7 @@ object LoadData {
         |       `课程标签`     as labels,
         |       `开课开始时间` as start_time,
         |       `开课结束时间` as end_time,
+        |       `课程概述`     as overview,
         |       `课程状态`     as status,
         |       `课程评分`     as grading,
         |       `封面图`       as cover_image_url
@@ -31,7 +33,7 @@ object LoadData {
         |""".stripMargin
     val frame = session.sql(sql)
     frame.show(10)
-    MysqlUtil.writeMysqlTable(frame,"course")
+    MysqlUtil.writeMysqlTable(SaveMode.Overwrite,frame,"course")
 
   }
 }
