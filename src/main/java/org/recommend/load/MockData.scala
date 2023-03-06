@@ -10,6 +10,7 @@ import scala.collection.mutable
  * 模拟用户行为数据
  */
 object MockData {
+
   case class StuCourse(student_id: Int, course_id: Int)
 
   def main(args: Array[String]): Unit = {

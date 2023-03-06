@@ -95,7 +95,7 @@ object UserCf {
       .agg(sum("rating").as("rating"))
     // 排序得出前12个推荐课程
     val user_rec = user_rec_tmp.selectExpr("user_id", "item_id as course_id", "row_number() over(partition by user_id order by rating desc) as ranking")
-      .where("rank<=" + k)
+      .where("ranking<=" + k)
     println("推荐结果")
     MysqlUtil.writeMysqlTable(SaveMode.Overwrite,user_rec,"course_recommend")
 

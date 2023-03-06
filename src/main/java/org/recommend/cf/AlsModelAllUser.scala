@@ -3,6 +3,8 @@ package org.recommend.cf
 import org.apache.log4j.{Level, Logger}
 import org.apache.spark.ml.evaluation.RegressionEvaluator
 import org.apache.spark.ml.recommendation.ALS
+import org.apache.spark.sql.SaveMode
+import org.apache.spark.sql.functions.explode
 import org.recommend.util.{MysqlUtil, SessionUtil}
 
 /**
@@ -28,6 +30,7 @@ object AlsModelAllUser {
       """.stripMargin
     println("加载评分表")
     val allData = session.sql(GetUserRatingSql)
+
     // 样本基本信息为
     val numRatings = allData.count()
     val numUser = allData.rdd.map(rating => rating.get(0)).distinct().count()
@@ -67,9 +70,28 @@ object AlsModelAllUser {
     val model = als.fit(trainData)
     // 冷启动处理。nan或者drop
     model.setColdStartStrategy("drop")
-    val frame = model.recommendForAllUsers(20)
-    // todo 过滤
-    frame.show(false)
+    val UserRecommend = model.recommendForAllUsers(20)
+    UserRecommend.show(20,false)
+    // 过滤 已经选过了的课程
+    UserRecommend.select(UserRecommend("student_id"), explode(UserRecommend("recommendations")))
+      .toDF("student_id", "recommendations")
+      .selectExpr("student_id", "recommendations.course_id", "recommendations.rating")
+      .createOrReplaceTempView("als_result")
+    // 过滤用户已经看过的节目和不在设备表的用户
+    val sql =
+      s"""
+         |    SELECT result.student_id as user_id,
+         |           result.course_id as course_id,
+         |           row_number() over(partition by student_id order by rating desc) as ranking
+         |    FROM als_result result
+         |WHERE NOT EXISTS
+         |    (SELECT 1
+         |     FROM student_course sc
+         |     WHERE result.student_id = sc.student_id
+         |       AND result.course_id = sc.course_id)
+        """.stripMargin
+    val frame = session.sql(sql)
+    MysqlUtil.writeMysqlTable(SaveMode.Overwrite,frame,"course_recommend")
     session.close()
   }
 

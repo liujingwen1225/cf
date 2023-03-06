@@ -16,7 +16,8 @@ object LoadData {
       .createOrReplaceTempView("curtain_lesson")
     val sql =
       """
-        |select `课程类型`     as type,
+        |select  row_number() over(ORDER BY `参加人数`) as id,
+        |       `课程类型`     as type,
         |       `课程链接`     as link,
         |       `参加人数`     as participants_number,
         |       `授课老师`     as instructor,

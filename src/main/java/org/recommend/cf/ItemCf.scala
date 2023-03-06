@@ -94,8 +94,8 @@ object ItemCf {
     // 获得最终的推荐
     val df_rec = df_rec_tmp.groupBy("user_id", "item_id")
       .agg(sum("rating").as("rating"))
-      .selectExpr("user_id", "item_id as course_id", "row_number() over(partition by user_id order by rating desc) as ranking")
-      .where("rank<=12")
+      .selectExpr("user_id", "cast(item_id as integer) as course_id", "row_number() over(partition by user_id order by rating desc) as ranking")
+      .where("ranking<=12")
     MysqlUtil.writeMysqlTable(SaveMode.Overwrite,df_rec,"course_recommend")
 
   }
