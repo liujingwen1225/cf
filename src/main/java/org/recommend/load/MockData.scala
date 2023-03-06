@@ -19,9 +19,9 @@ object MockData {
 
     val StuCourseList = mutable.MutableList[StuCourse]()
 
-    for (i <- 33 to 132) {
+    for (i <- 133 to 4132) {
       // 5-20
-      val randomCourseNum = scala.util.Random.nextInt(20 - 5 + 1) + 5
+      val randomCourseNum = scala.util.Random.nextInt(25 - 5 + 1) + 5
       val ints = RandomCourseList(randomCourseNum)
       for (elem <- ints) {
         StuCourseList += StuCourse(i, elem)
@@ -30,14 +30,14 @@ object MockData {
     //    StuCourseList.foreach(i => println(i))
     val StuCourseDF = session.createDataFrame(StuCourseList)
     StuCourseDF.show(100)
-    MysqlUtil.writeMysqlTable(SaveMode.Append,StuCourseDF, "student_course")
+    MysqlUtil.writeMysqlTable(SaveMode.Append, StuCourseDF, "student_course")
 
   }
 
   def RandomCourseList(n: Int) = {
     var outList: Set[Int] = Set()
     do {
-      outList += scala.util.Random.nextInt(609 - 308 + 1) + 308
+      outList += scala.util.Random.nextInt(308) + 1
     } while (outList.size < n)
     outList
   }
