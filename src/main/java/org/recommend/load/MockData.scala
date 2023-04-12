@@ -27,7 +27,7 @@ object MockData {
         StuCourseList += StuCourse(i, elem)
       }
     }
-    //    StuCourseList.foreach(i => println(i))
+    // StuCourseList.foreach(i => println(i))
     val StuCourseDF = session.createDataFrame(StuCourseList)
     StuCourseDF.show(100)
     MysqlUtil.writeMysqlTable(SaveMode.Append, StuCourseDF, "student_course")
@@ -37,7 +37,7 @@ object MockData {
   def RandomCourseList(n: Int) = {
     var outList: Set[Int] = Set()
     do {
-      outList += scala.util.Random.nextInt(308) + 1
+      outList += scala.util.Random.nextInt(6083) + 1
     } while (outList.size < n)
     outList
   }
