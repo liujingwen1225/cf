@@ -12,24 +12,47 @@ object LoadData {
 
     val sql =
       """
-        |select  row_number() over(ORDER BY `participants_number`) as id,
-        |       `type`     as type,
-        |       `link`     as link,
-        |       `participants_number`     as participants_number,
-        |       `instructor`     as instructor,
-        |       `name`     as name,
-        |       `school`     as school,
-        |       `labels`     as labels,
-        |       `start_time` as start_time,
-        |       `end_time` as end_time,
-        |       `overview`     as overview,
-        |       `status`     as status,
-        |       `grading`     as grading,
-        |       `cover_image_url`       as cover_image_url
-        |from course_infos where `name` is not null
+        |select row_number() over (ORDER BY `participants_number`) as id,
+        |       type,
+        |       link,
+        |       participants_number,
+        |       instructor,
+        |       name,
+        |       school,
+        |       labels,
+        |       start_time,
+        |       start_time_date,
+        |       end_time,
+        |       end_time_date,
+        |       overview,
+        |       status,
+        |       grading,
+        |       cover_image_url
+        |from (select row_number() over (partition by name,school ORDER BY `participants_number`) as rn,
+        |             `type`                                                                 as type,
+        |             `link`                                                                 as link,
+        |              ifnull(`participants_number`, 0)                                       as participants_number,
+        |             `instructor`                                                           as instructor,
+        |             `name`                                                                 as name,
+        |             `school`                                                               as school,
+        |             `labels`                                                               as labels,
+        |             `start_time`                                                           as start_time,
+        |             cast(regexp_replace(regexp_replace(regexp_replace(`start_time`,'年','-'),'月','-'),'日','') as date)                                                           as start_time_date,
+        |             `end_time`                                                             as end_time,
+        |             cast(regexp_replace(regexp_replace(regexp_replace(`end_time`,'年','-'),'月','-'),'日','') as date)                                                          as end_time_date,
+        |             `overview`                                                             as overview,
+        |             `status`                                                               as status,
+        |             ifnull(`grading`, 0)                                                   as grading,
+        |             `cover_image_url`                                                      as cover_image_url
+        |      from course_infos
+        |      where `name` is not null
+        |        and `instructor` is not null
+        |        and `start_time` < '2024-01-01'
+        |        and `end_time` < '2024-01-01') t
+        |where rn = 1
         |""".stripMargin
     val frame = session.sql(sql)
-    frame.show(10)
+//    frame.show(10)
     MysqlUtil.writeMysqlTable(SaveMode.Overwrite,frame,"course")
 
   }
