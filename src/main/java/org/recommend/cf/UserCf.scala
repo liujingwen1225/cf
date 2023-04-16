@@ -5,7 +5,7 @@ import org.recommend.util.{MysqlUtil, SessionUtil}
 
 /**
  * 基于用户的协同过滤算法
- * usercf
+ * user cf
  */
 object UserCf {
   def main(args: Array[String]): Unit = {
@@ -19,10 +19,27 @@ object UserCf {
     // 使用余弦相似度计算用户相似度
     val GetUserRatingSql =
     s"""
-       |select st.student_id as user_id, st.course_id as item_id, (ifnull(st.rating, 2) * 0.4 + c.grading * 0.6) rating
-       |from student_course st
-       |         left join course c on c.id = st.course_id
-       |where grading is not null
+       |select student_id as user_id,
+       |       course_id as item_id,
+       |       (1 + student_rating + course_ating + typera_ting + school_rating + labels_rating) as rating
+       |from (select st.student_id,
+       |             st.course_id,
+       |             st.rating,
+       |             c.grading,
+       |             su.course_type,
+       |             c.type,
+       |             su.school_names,
+       |             c.school,
+       |             su.labels,
+       |             c.labels,
+       |             (ifnull(st.rating, 4) * 0.2)                     student_rating,
+       |             (ifnull(c.grading, 3) * 0.3)                     course_ating,
+       |             if(instr(su.course_type, c.type) > 0, 0.5, 0)    typera_ting,
+       |             if(instr(su.school_names, c.school) > 0.5, 0, 0) school_rating,
+       |             if(instr(su.labels, c.labels) > 0, 0.5, 0)       labels_rating
+       |      from student_course st
+       |               left join course c on c.id = st.course_id
+       |               left join sys_user su on st.student_id = su.id) source
       """.stripMargin
     println("加载评分表")
     val df = session.sql(GetUserRatingSql)
@@ -97,7 +114,7 @@ object UserCf {
     val user_rec = user_rec_tmp.selectExpr("user_id", "item_id as course_id", "row_number() over(partition by user_id order by rating desc) as ranking")
       .where("ranking<=" + k)
     println("推荐结果")
-    MysqlUtil.writeMysqlTable(SaveMode.Overwrite,user_rec,"course_recommend")
+    MysqlUtil.writeMysqlTable(SaveMode.Overwrite,user_rec,"course_recommend_user_cf")
 
   }
 }

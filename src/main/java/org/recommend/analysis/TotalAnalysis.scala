@@ -9,6 +9,7 @@ object TotalAnalysis {
     //    课程数量
     //    授课教师数量
     //    授课学校数量
+    MysqlUtil.readMysqlTable(sparkSession,"student_course")
     val sql1 =
     """
       |select *
@@ -22,17 +23,14 @@ object TotalAnalysis {
       |               from (select 1 from student_course group by student_id) t) t4
       |""".stripMargin
     val frame = sparkSession.sql(sql1)
+
     val sql2 =
       """
-        |select *
-        |from (select count(*) school_cnt
-        |      from (select 1 from course group by school) t) t1
-        |         join (select count(*) name_cnt
-        |               from (select 1 from course group by name) t) t2
-        |         join (select count(*) instructor_cnt
-        |               from (select 1 from course group by instructor) t) t3
-        |         join (select count(*) student_cnt
-        |               from (select 1 from student_course group by student_id) t) t4
+        |select labels,count(1) cnt
+        |from course group by labels
+        |union all
+        |select status,count(1) cnt
+        |from course group by status;
         |""".stripMargin
     val frame2 = sparkSession.sql(sql2)
     MysqlUtil.writeMysqlTable(SaveMode.Overwrite, frame, "total_analysis")
