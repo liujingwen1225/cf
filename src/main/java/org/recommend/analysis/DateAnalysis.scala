@@ -13,7 +13,7 @@ object DateAnalysis {
         |         from (select year(start_time_date) as `year`,month(start_time_date) as `ymonth`, name, sum(participants_number) name_pns
         |from course
         |group by year(start_time_date),month(start_time_date), name order by year,ymonth, name_pns desc) tem
-        |     ) t where rn =5;
+        |     ) t where rn <=10;
         |""".stripMargin
     sparkSession.sql(sql1).createOrReplaceTempView("t1")
 
@@ -25,7 +25,7 @@ object DateAnalysis {
         |         from (select year(start_time_date) as `year`,month(start_time_date) as `ymonth`, instructor, sum(participants_number) instructor_pns
         |from course
         |group by year(start_time_date),month(start_time_date), instructor order by year ,ymonth ,instructor_pns desc) tem
-        |     ) t where rn =5;
+        |     ) t where rn <=10;
         |""".stripMargin
     sparkSession.sql(sql2).createOrReplaceTempView("t2")
     val sql3 =
@@ -36,7 +36,7 @@ object DateAnalysis {
         |         from (select year(start_time_date) as `year`,month(start_time_date) as `ymonth`, school, sum(participants_number) school_pns
         |from course
         |group by year(start_time_date),month(start_time_date), school order by year ,ymonth ,school_pns desc) tem
-        |     ) t where rn =5;
+        |     ) t where rn <=10;
         |""".stripMargin
      sparkSession.sql(sql3).createOrReplaceTempView("t3")
   val sql  =
