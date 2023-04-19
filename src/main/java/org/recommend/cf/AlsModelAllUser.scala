@@ -86,7 +86,7 @@ object AlsModelAllUser {
     val model = als.fit(trainData)
     // 冷启动处理。nan或者drop
     model.setColdStartStrategy("drop")
-    val UserRecommend = model.recommendForAllUsers(20)
+    val UserRecommend = model.recommendForAllUsers(50)
     UserRecommend.show(20,false)
     // 过滤 已经选过了的课程
     UserRecommend.select(UserRecommend("student_id"), explode(UserRecommend("recommendations")))
