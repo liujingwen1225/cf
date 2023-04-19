@@ -1,0 +1,1 @@
+spark-3.2.4-bin-hadoop3.2/bin/spark-submit --class "org.recommend.analysis.MainAnalysis" --name "推荐系统-数据分析" --master "spark://192.168.0.92:7077" --deploy-mode "cluster"

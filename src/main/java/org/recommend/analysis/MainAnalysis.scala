@@ -7,9 +7,9 @@ object MainAnalysis {
     val session = SessionUtil.createSparkSession(this.getClass)
     MysqlUtil.readMysqlTable(session, "course")
 
-//    HotAnalysis.hotAnalysis(session)
-//    CntAnalysis.cntAnalysis(session)
-//    TotalAnalysis.totalAnalysis(session)
+    HotAnalysis.hotAnalysis(session)
+    CntAnalysis.cntAnalysis(session)
+    TotalAnalysis.totalAnalysis(session)
     DateAnalysis.dateAnalysis(session)
   }
 }
