@@ -7,8 +7,8 @@ import java.util.Properties
 /**
  * mysql 读写工具类
  */
-object MysqlUtil {
-  private val url = "jdbc:mysql://43.136.26.67:13306/course-recommend?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=true&serverTimezone=GMT%2B8&rewriteBatchedStatements=true"
+object HourseMysqlUtil {
+  private val url = "jdbc:mysql://4x.13x.2x.x7:1330x/house_db?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=true&serverTimezone=GMT%2B8&rewriteBatchedStatements=true"
   private val prop = new Properties
   prop.setProperty("user", "root")
   prop.setProperty("driver", "com.mysql.cj.jdbc.Driver")

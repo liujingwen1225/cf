@@ -19,6 +19,7 @@ object ItemCf {
     //注册 mysql 用户评分表
     MysqlUtil.readMysqlTable(session, "student_course")
     MysqlUtil.readMysqlTable(session, "course")
+    MysqlUtil.readMysqlTable(session, "sys_user")
     val GetUserRatingSql =
       s"""
          |select student_id as user_id,

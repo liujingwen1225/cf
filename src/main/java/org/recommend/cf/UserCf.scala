@@ -16,6 +16,7 @@ object UserCf {
     //注册 mysql 用户评分表
     MysqlUtil.readMysqlTable(session, "student_course")
     MysqlUtil.readMysqlTable(session, "course")
+    MysqlUtil.readMysqlTable(session, "sys_user")
     // 使用余弦相似度计算用户相似度
     val GetUserRatingSql =
     s"""
@@ -74,6 +75,7 @@ object UserCf {
     val user_item_list = df.rdd.map(row => {
       (row(0).toString, (row(1).toString + "_" + row(2).toString))
     }).groupByKey().mapValues(x => x.toArray).toDF("user_id", "item_list")
+    user_item_list.show
 
     // 对用户获得的物品集合进行去重
     val user_item_list_v = user_item_list
@@ -109,7 +111,8 @@ object UserCf {
     // 对用户进行推荐的课程评分
     val user_rec_tmp = user_dis_item.selectExpr("user_id", "calItemRating(cos,items) as items").selectExpr("user_id", "explode(items) as tu").selectExpr("user_id", "tu._1 as item_id", "tu._2 as rating")
       .groupBy("user_id", "item_id")
-      .agg(sum("rating").as("rating"))
+      .agg(avg("rating").as("rating"))
+    user_rec_tmp.show()
     // 排序得出前12个推荐课程
     val user_rec = user_rec_tmp.selectExpr("user_id", "item_id as course_id", "row_number() over(partition by user_id order by rating desc) as ranking")
       .where("ranking<=" + k)
